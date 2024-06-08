@@ -16,6 +16,10 @@ interface PostQuery {
     answer: string
 }
 
+interface Summary {
+    summary: string
+}
+
 interface SavedChatProps {
     chats?: Message[]
     savedChatName?: string | null
@@ -156,6 +160,22 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
         setIsCheckedAskLLM(event.target.checked);
     };
 
+    const handleSummarize = async () => {
+        const token = Cookies.get('token');
+        const response = await getData<Summary>(
+            "http://localhost:8080/api/v1/chatbot/summarize",
+            {
+                'Authorization': `Bearer ${token}`
+            }
+        );
+
+        if (response !== null) {
+            alert(response.summary);
+        } else {
+            alert('Could Not Summarize');
+        }
+    }
+
 
     const username = localStorage.getItem('username') === null
         ? 'You'
@@ -206,6 +226,7 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
                     <button onClick={handleSendMessage} className='btn btn-primary'>Send</button>
                     <button onClick={handleUpload} className='btn btn-success'>Upload</button>
                     <button onClick={handleSaveChat} className='btn btn-danger' >Save Chat</button>
+                    <button onClick={handleSummarize} className='btn btn-info' >Summarize</button>
                     <button className='btn btn-warning' onClick={async () => {
                         const token = Cookies.get('token')
                         const response = await getData<string>("http://localhost:8080/api/v1/chatbot/emptyContext",
