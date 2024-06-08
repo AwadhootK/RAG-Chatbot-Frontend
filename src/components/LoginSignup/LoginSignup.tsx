@@ -44,7 +44,7 @@ const LoginForm: React.FC = () => {
         }
         else {
             Cookies.set("token", response.token, { expires: 60 * 60 * 24 })
-            navigate('/chat')
+            navigate('/home')
         }
 
     };
@@ -64,7 +64,7 @@ const LoginForm: React.FC = () => {
         }
         else {
             Cookies.set("token", response.token, { expires: 60 * 60 * 24 })
-            navigate('/chat')
+            navigate('/home')
         }
     };
 

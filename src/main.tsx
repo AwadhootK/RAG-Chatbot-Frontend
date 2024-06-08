@@ -14,7 +14,7 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />
   },
   {
-    'path': '/chat',
+    'path': '/home',
     element: <ProtectedRoute />,
     errorElement: <NotFoundPage />
   }
@@ -26,6 +26,7 @@ function ProtectedRoute() {
 
   useEffect(() => {
     const token = Cookies.get("token");
+    console.log(token)
 
     if (token) {
       setAuthenticated(true);
@@ -33,9 +34,9 @@ function ProtectedRoute() {
       setAuthenticated(false);
       navigate('/');
     }
-  }, [location.pathname]);
+  }, []);
 
-  return authenticated ? <Homepage /> : null;
+  return authenticated ? < Homepage /> : null;
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
