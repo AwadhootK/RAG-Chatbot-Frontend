@@ -19,6 +19,7 @@ interface Chat {
 
 function SavedChatList() {
     const [savedChatList, setSavedChatList] = useState<String[]>([]);
+    const [selectedSavedChatName, setSelectedSavedChatName] = useState<String>('');
     const [selectedMessages, setSelectedMessages] = useState<Message[] | null>(null);
 
     useEffect(() => {
@@ -46,6 +47,7 @@ function SavedChatList() {
 
     const handleSavedChatClick = async (chatName: String) => {
         const token = Cookies.get('token');
+        setSelectedSavedChatName(chatName);
         const response = await postData<Chat[]>(
             "http://localhost:8080/api/v1/chatbot/getSaveChats",
             {
@@ -62,7 +64,16 @@ function SavedChatList() {
                 text: c.message,
                 sender: c.chatRole === "USER" ? "user" : "bot",
             }));
+
+            await getData<string>(
+                "http://localhost:8080/api/v1/chatbot/restoreContext",
+                {
+                    'Authorization': `Bearer ${token}`
+                }
+            );
+
             setSelectedMessages(savedMessageList);
+
         } else {
             alert(`Some error occurred while loading saved chat: ${chatName}`);
         }
@@ -81,7 +92,7 @@ function SavedChatList() {
                     </ul>
                 </div>
             ) : (
-                <Chatbot chats={selectedMessages || []} />
+                <Chatbot chats={selectedMessages || []} savedChatName={selectedSavedChatName} />
             )}
         </>
     );

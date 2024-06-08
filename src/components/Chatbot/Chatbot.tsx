@@ -18,9 +18,10 @@ interface PostQuery {
 
 interface SavedChatProps {
     chats?: Message[]
+    savedChatName?: string | null
 }
 
-const Chatbot: React.FC = ({ chats = [] }: SavedChatProps) => {
+const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps) => {
 
     const [messages, setMessages] = useState<Message[]>([...chats]);
     const [inputText, setInputText] = useState('');
@@ -118,10 +119,15 @@ const Chatbot: React.FC = ({ chats = [] }: SavedChatProps) => {
 
     const handleSaveChat = async () => {
         const token = Cookies.get('token');
-        const savedName = prompt('Enter name of chat to save');
-        if (savedName === null || savedName.trim() === '') {
-            alert('Please provide a chat name to save');
-            return;
+        var savedName: string | null = '';
+        if (savedChatName !== null) {
+            savedName = savedChatName;
+        } else {
+            savedName = prompt('Enter name of chat to save');
+            if (savedName === null || savedName.trim() === '') {
+                alert('Please provide a chat name to save');
+                return;
+            }
         }
 
         const response = await postData<string>(
@@ -130,7 +136,7 @@ const Chatbot: React.FC = ({ chats = [] }: SavedChatProps) => {
                 'Authorization': `Bearer ${token}`
             },
             {
-                "chatName": savedName // Use savedName directly here
+                "chatName": savedName 
             }
         );
 
