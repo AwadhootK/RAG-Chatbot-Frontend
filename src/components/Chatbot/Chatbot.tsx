@@ -1,10 +1,11 @@
 import axios, { AxiosError, AxiosProgressEvent } from 'axios';
 import Cookies from 'js-cookie';
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getData, postData } from '../../Utils';
 import LogoutBtn from '../HomePage/LogoutBtn';
 
-interface Message {
+export interface Message {
     id: number;
     text: string;
     sender: 'user' | 'bot' | 'loading';
@@ -15,8 +16,13 @@ interface PostQuery {
     answer: string
 }
 
-const Chatbot: React.FC = () => {
-    const [messages, setMessages] = useState<Message[]>([]);
+interface SavedChatProps {
+    chats?: Message[]
+}
+
+const Chatbot: React.FC = ({ chats = [] }: SavedChatProps) => {
+
+    const [messages, setMessages] = useState<Message[]>([...chats]);
     const [inputText, setInputText] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -110,67 +116,98 @@ const Chatbot: React.FC = () => {
         }
     };
 
+    const handleSaveChat = async () => {
+        const token = Cookies.get('token');
+        const savedName = prompt('Enter name of chat to save');
+        if (savedName === null || savedName.trim() === '') {
+            alert('Please provide a chat name to save');
+            return;
+        }
+
+        const response = await postData<string>(
+            "http://localhost:8080/api/v1/chatbot/saveChats",
+            {
+                'Authorization': `Bearer ${token}`
+            },
+            {
+                "chatName": savedName // Use savedName directly here
+            }
+        );
+
+        if (response !== null) {
+            alert(`Chat saved as ${savedName}!`);
+        } else {
+            alert('Chat could not be saved! Please try again.');
+        }
+    };
+
     const username = localStorage.getItem('username') === null
         ? 'You'
         : localStorage.getItem('username');
 
+    const navigate = useNavigate();
+
     return (
-        <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-            < LogoutBtn />
-            <div style={{ width: '100%', maxWidth: '1000px', border: '1px solid #ccc', borderRadius: '5px', padding: '20px' }}>
-                <h2>Chatbot</h2>
-                <center>
-                    <div style={{ backgroundColor: 'grey', cursor: 'pointer' }} onClick={() => document.getElementById('fileInput')?.click()}>
-                        <h1>+</h1>
-                    </div>
-                </center>
-                <input
-                    type="file"
-                    id="fileInput"
-                    style={{ display: 'none' }}
-                    onChange={handleFileChange}
-                />
-                <div style={{ height: '300px', overflowY: 'scroll' }}>
-                    {messages.map((message) => (
-                        <div key={message.id} style={{ marginBottom: '10px' }}>
-                            {message.sender === 'user' ? (
-                                <div style={{ textAlign: 'right', color: 'blue' }}>
-                                    <strong>{username}: </strong> {message.text}
-                                </div>
-                            ) : (
-                                <div style={{ color: 'green' }}>
-                                    <strong>Bot:</strong> {message.text}
-                                </div>
-                            )}
+        <>
+            <button onClick={() => navigate('/home')}>Home</button>
+            <div style={{ width: '100vw', height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                < LogoutBtn />
+                <div style={{ width: '100%', maxWidth: '1000px', border: '1px solid #ccc', borderRadius: '5px', padding: '20px' }}>
+                    <h2>Chatbot</h2>
+                    <center>
+                        <div style={{ backgroundColor: 'grey', cursor: 'pointer' }} onClick={() => document.getElementById('fileInput')?.click()}>
+                            <h1>+</h1>
                         </div>
-                    ))}
+                    </center>
+                    <input
+                        type="file"
+                        id="fileInput"
+                        style={{ display: 'none' }}
+                        onChange={handleFileChange}
+                    />
+                    <div style={{ height: '300px', overflowY: 'scroll' }}>
+                        {messages.map((message) => (
+                            <div key={message.id} style={{ marginBottom: '10px' }}>
+                                {message.sender === 'user' ? (
+                                    <div style={{ textAlign: 'right', color: 'blue' }}>
+                                        <strong>{username}: </strong> {message.text}
+                                    </div>
+                                ) : (
+                                    <div style={{ color: 'green' }}>
+                                        <strong>Bot:</strong> {message.text}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Type your message..."
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        style={{ width: '100%', marginTop: '10px', padding: '5px' }}
+                    />
+                    <button onClick={handleSendMessage} className='btn btn-primary'>Send</button>
+                    <button onClick={handleUpload} className='btn btn-success'>Upload</button>
+                    <button onClick={handleSaveChat} className='btn btn-danger' >Save Chat</button>
+                    <button className='btn btn-warning' onClick={async () => {
+                        const token = Cookies.get('token')
+                        const response = await getData<string>("http://localhost:8080/api/v1/chatbot/emptyContext",
+                            {
+                                'Authorization': `Bearer ${token}`
+                            });
+                        if (response != null) {
+                            alert('Context cleared!');
+                        } else {
+                            alert('Some error occurred in clearing context');
+                        }
+                    }}>Clear</button>
+                    {uploadProgress > 0 && (
+                        <p>Upload progress: {uploadProgress}%</p>
+                    )}
                 </div>
-                <input
-                    type="text"
-                    placeholder="Type your message..."
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    style={{ width: '100%', marginTop: '10px', padding: '5px' }}
-                />
-                <button onClick={handleSendMessage} style={{ marginTop: '10px', padding: '5px 10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>Send</button>
-                <button onClick={handleUpload} style={{ marginTop: '10px', padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '3px', cursor: 'pointer' }}>Upload</button>
-                {uploadProgress > 0 && (
-                    <p>Upload progress: {uploadProgress}%</p>
-                )}
-                <button className='btn btn-warning' onClick={async () => {
-                    const token = Cookies.get('token')
-                    const response = await getData<string>("http://localhost:8080/api/v1/chatbot/emptyContext",
-                        {
-                            'Authorization': `Bearer ${token}`
-                        });
-                    if (response != null) {
-                        alert('Context cleared!');
-                    } else {
-                        alert('Some error occurred in clearing context');
-                    }
-                }}>Clear</button>
             </div>
-        </div>
+        </>
     );
 };
 
