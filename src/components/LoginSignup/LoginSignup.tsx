@@ -43,6 +43,7 @@ const LoginForm: React.FC = () => {
             alert('Error in Login...')
         }
         else {
+            localStorage.setItem('username', username);
             Cookies.set("token", response.token, { expires: 60 * 60 * 24 })
             navigate('/home')
         }
@@ -63,6 +64,7 @@ const LoginForm: React.FC = () => {
             alert('Error in Registering...')
         }
         else {
+            localStorage.setItem('username', username);
             Cookies.set("token", response.token, { expires: 60 * 60 * 24 })
             navigate('/home')
         }

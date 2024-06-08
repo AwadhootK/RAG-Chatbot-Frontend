@@ -1,41 +1,22 @@
-import Cookies from 'js-cookie';
-import { useEffect, useState } from "react";
-import { getData } from "../../Utils";
-
-
+import { useNavigate } from "react-router-dom";
+import LogoutBtn from "./LogoutBtn";
+import SavedChatList from "./SavedChatList";
 function Homepage() {
-    const [savedChatList, setSavedChatList] = useState<String[]>([]);
-    useEffect(() => {
-        // Function to fetch data from API
-        const fetchData = async () => {
-            try {
-                const token = Cookies.get('token');
-                const response = await getData<String[]>(
-                    "http://localhost:8080/api/v1/chatbot/getAllSavedChatNames",
-                    {
-                        "Authorization": `Bearer ${token}`
-                    }
-                );
-
-                if (response != null) {
-                    setSavedChatList(response);
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-
-        fetchData();
-        return () => { };
-    }, []);
-
-    return <>
-        <div>
-            <ul>
-                {savedChatList && savedChatList.map((savedChat, index) => <li key={index}>{savedChat}</li>)}
-            </ul >
-        </div>
-    </>
+    const navigate = useNavigate();
+    return (
+        <>
+            <SavedChatList />
+            < LogoutBtn />
+            <div>Homepage</div>
+            <div>
+                <button onClick={() => {
+                    navigate('/chat')
+                }}>
+                    Click to start a new chat!
+                </button>
+            </div>
+        </>
+    )
 }
 
 export default Homepage
