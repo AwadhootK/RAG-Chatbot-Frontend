@@ -27,6 +27,8 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
     const [inputText, setInputText] = useState('');
     const [file, setFile] = useState<File | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number>(0);
+    const [isCheckedAskLLM, setIsCheckedAskLLM] = useState(false);
+
 
     const handleSendMessage = async () => {
         if (inputText.trim() !== '') {
@@ -46,8 +48,11 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
             setMessages(prevMessages => [...prevMessages, loader]);
 
             const token = Cookies.get('token');
+            const url = isCheckedAskLLM
+                ? "http://localhost:8080/api/v1/chatbot/answerLLM"
+                : "http://localhost:8080/api/v1/chatbot/ask";
             const response = await postData<PostQuery>(
-                "http://localhost:8080/api/v1/chatbot/ask",
+                url,
                 {
                     "Authorization": `Bearer ${token}`
                 },
@@ -136,7 +141,7 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
                 'Authorization': `Bearer ${token}`
             },
             {
-                "chatName": savedName 
+                "chatName": savedName
             }
         );
 
@@ -146,6 +151,11 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
             alert('Chat could not be saved! Please try again.');
         }
     };
+
+    const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setIsCheckedAskLLM(event.target.checked);
+    };
+
 
     const username = localStorage.getItem('username') === null
         ? 'You'
@@ -211,6 +221,18 @@ const Chatbot: React.FC = ({ chats = [], savedChatName = null }: SavedChatProps)
                     {uploadProgress > 0 && (
                         <p>Upload progress: {uploadProgress}%</p>
                     )}
+                </div>
+                <div className="custom-control custom-switch">
+                    <input
+                        type="checkbox"
+                        className="custom-control-input"
+                        id="customSwitch1"
+                        checked={isCheckedAskLLM}
+                        onChange={handleCheckboxChange}
+                    />
+                    <label className="custom-control-label" htmlFor="customSwitch1">
+                        Ask LLM
+                    </label>
                 </div>
             </div>
         </>
